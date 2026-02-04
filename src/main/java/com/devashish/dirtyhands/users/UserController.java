@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 
+import com.devashish.dirtyhands.common.ApiResponse;
+import com.devashish.dirtyhands.common.RequestIdUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/users")
@@ -24,17 +28,22 @@ public class UserController {
         this.userService = userService;
     }
     @GetMapping
-    public ResponseEntity<List<UserDetail>> getUsers() {
-        return ResponseEntity.ok(this.userService.getAllUsers());
+    public ResponseEntity<ApiResponse<List<UserDetail>>> getUsers(HttpServletRequest request) {
+        String requestId = RequestIdUtil.getRequestId(request);
+        return ResponseEntity.ok(ApiResponse.ok(this.userService.getAllUsers(), requestId));
     }
 
     @PostMapping
-    public ResponseEntity<UserDetail> postUsers(@Valid @RequestBody UserRequest request) {
+    public ResponseEntity<ApiResponse<UserDetail>> postUsers(
+        @Valid @RequestBody UserRequest request,
+        HttpServletRequest httpRequest
+    ) {
         UserDetail user = new UserDetail();
         user.setName(request.name());
         user.setCollegeName(request.collegeName());
 
         UserDetail saved = this.userService.save(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        String requestId = RequestIdUtil.getRequestId(httpRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(saved, requestId));
     }
 }
