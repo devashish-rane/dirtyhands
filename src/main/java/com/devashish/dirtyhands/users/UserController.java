@@ -28,22 +28,23 @@ public class UserController {
         this.userService = userService;
     }
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UserDetail>>> getUsers(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getUsers(HttpServletRequest request) {
         String requestId = RequestIdUtil.getRequestId(request);
-        return ResponseEntity.ok(ApiResponse.ok(this.userService.getAllUsers(), requestId));
+        List<UserResponse> users = this.userService.getAllUsers().stream()
+            .map(UserMapper::toResponse)
+            .toList();
+        return ResponseEntity.ok(ApiResponse.ok(users, requestId));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<UserDetail>> postUsers(
+    public ResponseEntity<ApiResponse<UserResponse>> postUsers(
         @Valid @RequestBody UserRequest request,
         HttpServletRequest httpRequest
     ) {
-        UserDetail user = new UserDetail();
-        user.setName(request.name());
-        user.setCollegeName(request.collegeName());
+        UserDetail user = UserMapper.toEntity(request);
 
         UserDetail saved = this.userService.save(user);
         String requestId = RequestIdUtil.getRequestId(httpRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(saved, requestId));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(UserMapper.toResponse(saved), requestId));
     }
 }
